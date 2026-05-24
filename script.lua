@@ -8,37 +8,30 @@ local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local rootPart = character:WaitForChild("HumanoidRootPart")
 
--- ---- CONFIGURATION ----
 local speed = 25
 local farming = false
-local coinName = "Coin" -- Change to match game item names
--- -----------------------
+local coinName = "Coin" 
 
--- Fetch Profile Picture Asset ID
 local userId = player.UserId
 local thumbType = Enum.ThumbnailType.HeadShot
 local thumbSize = Enum.ThumbnailSize.Size150x150
 local profileAssetId, isReady = Players:GetUserThumbnailAsync(userId, thumbType, thumbSize)
 if not isReady then
-    profileAssetId = "rbxassetid://0" -- Fallback if avatar fails to load
+    profileAssetId = "rbxassetid://0"
 end
 
--- Load Rayfield Library External UI
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Sleep for UGC | Coin Farmer",
    LoadingTitle = "Loading System...",
-   LoadingSubtitle = "by Your Name",
-   ConfigurationSaving = {
-      Enabled = false
-   },
-   KeySystem = false -- Set to true if you want a password/key system
+   LoadingSubtitle = "by EZLOL1112",
+   ConfigurationSaving = { Enabled = false },
+   KeySystem = false
 })
 
-local MainTab = Window:CreateTab("Farmer Controls", 4483362458) -- Tab Name and Icon Asset ID
+local MainTab = Window:CreateTab("Farmer Controls", 4483362458)
 
--- Profile Picture Header Element
 local ProfileImage = MainTab:CreateImage({
    Name = player.DisplayName or player.Name,
    Image = profileAssetId,
@@ -46,11 +39,9 @@ local ProfileImage = MainTab:CreateImage({
    Description = "Active User Profile"
 })
 
--- Distance check function
 local function getClosestCoin()
     local closestCoin = nil
     local shortestDistance = math.huge
-    
     for _, obj in pairs(Workspace:GetDescendants()) do
         if obj.Name == coinName and obj:IsA("BasePart") then
             local distance = (rootPart.Position - obj.Position).Magnitude
@@ -63,17 +54,13 @@ local function getClosestCoin()
     return closestCoin
 end
 
--- Main Farming Toggle
 local Toggle = MainTab:CreateToggle({
    Name = "Auto Farm Coins",
    CurrentValue = false,
    Flag = "CoinToggle",
-   Callback = function(Value)
-      farming = Value
-   end,
+   Callback = function(Value) farming = Value end,
 })
 
--- Safe Speed Range Control
 local Slider = MainTab:CreateSlider({
    Name = "Tween Speed Multiplier",
    Min = 1,
@@ -81,43 +68,30 @@ local Slider = MainTab:CreateSlider({
    CurrentValue = 25,
    Increment = 1,
    ValueName = "Speed",
-   Callback = function(Value)
-      speed = Value
-   end,
+   Callback = function(Value) speed = Value end,
 })
 
--- Core Farming Background Process Loop
 task.spawn(function()
     while true do
         task.wait(0.1)
         if farming then
             character = player.Character or player.CharacterAdded:Wait()
             rootPart = character:WaitForChild("HumanoidRootPart")
-            
             local targetCoin = getClosestCoin()
             if targetCoin then
                 local distance = (rootPart.Position - targetCoin.Position).Magnitude
                 local duration = distance / speed
-                
                 local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Linear)
                 local tween = TweenService:Create(rootPart, tweenInfo, {CFrame = targetCoin.CFrame})
-                
                 tween:Play()
-                
                 local completed = false
                 local connection
                 connection = tween.Completed:Connect(function()
                     completed = true
                     connection:Disconnect()
                 end)
-                
-                while not completed and farming do
-                    task.wait(0.05)
-                end
-                
-                if not farming then
-                    tween:Cancel()
-                end
+                while not completed and farming do task.wait(0.05) end
+                if not farming then tween:Cancel() end
             end
         end
     end
